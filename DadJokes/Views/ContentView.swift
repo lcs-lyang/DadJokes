@@ -19,6 +19,8 @@ struct ContentView: View {
         VStack {
             
             Text(currentJoke.joke)
+                .font(.title)
+                .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.leading)
                 .padding(30)
                 .overlay(
@@ -32,7 +34,16 @@ struct ContentView: View {
                 .frame(width: 40, height: 40)
             
             Button(action: {
-                print("Button was pressed")
+                //The task type allows us to run asynchronous code
+                //within a button and have the user interface be updated
+                //when the data is ready.
+                //Since ut is asynchronous, other tasks can run while
+                //we wait for the data to come back from the web server.
+                Task{
+                    // Call the function that will get us a new joke!
+                    await loadNewJoke()
+                }
+               
             }, label: {
                 Text("Another one!")
             })
@@ -59,46 +70,65 @@ struct ContentView: View {
         }
         // When the app opens, get a new joke from the web service
         .task {
+            //Load a joke from the endpoint!
+            //We are "calling" or "invoking" the function
+            // named "loadNewJoke"
+            //A term for this is the "call site" of a function
             
-            // Assemble the URL that points to the endpoint
-            let url = URL(string: "https://icanhazdadjoke.com/")!
+            //This just  means that we, as the programmer, are aware
+            //that this function is asynchronous.
+            //Result might come right awat, or, take some time ti complete.
+            // ALSO: Any code below this call will run before the function call completes.
+           await loadNewJoke()
             
-            // Define the type of data we want from the endpoint
-            // Configure the request to the web site
-            var request = URLRequest(url: url)
-            // Ask for JSON data
-            request.setValue("application/json",
-                             forHTTPHeaderField: "Accept")
-            
-            // Start a session to interact (talk with) the endpoint
-            let urlSession = URLSession.shared
-            
-            // Try to fetch a new joke
-            // It might not work, so we use a do-catch block
-            do {
-                
-                // Get the raw data from the endpoint
-                let (data, _) = try await urlSession.data(for: request)
-                
-                // Attempt to decode the raw data into a Swift structure
-                // Takes what is in "data" and tries to put it into "currentJoke"
-                //                                 DATA TYPE TO DECODE TO
-                //                                         |
-                //                                         V
-                currentJoke = try JSONDecoder().decode(DadJoke.self, from: data)
-                
-            } catch {
-                print("Could not retrieve or decode the JSON from endpoint.")
-                // Print the contents of the "error" constant that the do-catch block
-                // populates
-                print(error)
-            }
-            
+            print("I tried to load a new joke")
         }
         .navigationTitle("icanhazdadjoke?")
         .padding()
     }
     
+    //MARK: Functions
+    //Define the function "loadNewFunction"
+    //Teaching our app
+    //Using the "aysnc" keyword means that this functon can potentially
+    //be run alongside other tasks that the app needs to do (for example,
+    //updating the user interface)
+    func loadNewJoke() async {
+        // Assemble the URL that points to the endpoint
+        let url = URL(string: "https://icanhazdadjoke.com/")!
+        
+        // Define the type of data we want from the endpoint
+        // Configure the request to the web site
+        var request = URLRequest(url: url)
+        // Ask for JSON data
+        request.setValue("application/json",
+                         forHTTPHeaderField: "Accept")
+        
+        // Start a session to interact (talk with) the endpoint
+        let urlSession = URLSession.shared
+        
+        // Try to fetch a new joke
+        // It might not work, so we use a do-catch block
+        do {
+            
+            // Get the raw data from the endpoint
+            let (data, _) = try await urlSession.data(for: request)
+            
+            // Attempt to decode the raw data into a Swift structure
+            // Takes what is in "data" and tries to put it into "currentJoke"
+            //                                 DATA TYPE TO DECODE TO
+            //                                         |
+            //                                         V
+            currentJoke = try JSONDecoder().decode(DadJoke.self, from: data)
+            
+        } catch {
+            print("Could not retrieve or decode the JSON from endpoint.")
+            // Print the contents of the "error" constant that the do-catch block
+            // populates
+            print(error)
+        }
+
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
